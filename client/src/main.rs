@@ -91,7 +91,6 @@ async fn main() -> io::Result<()> {
         std::process::exit(1);
     });
 
-    
     let (tx, rx) = mpsc::channel(32);
 
     // Tâche pour recevoir des messages
@@ -101,10 +100,18 @@ async fn main() -> io::Result<()> {
         loop {
             match socket_clone.recv_from(&mut buf).await {
                 Ok((amt, _src)) => {
-                    let response: Result<MessageRecieve, Error> = serde_json::from_slice(&buf[..amt]);
+                    let response: Result<MessageRecieve, Error> =
+                        serde_json::from_slice(&buf[..amt]);
                     if let Ok(message) = response {
+                        let message_clone = message.clone();
                         if let Err(e) = tx.send(message).await {
                             eprintln!("Failed to send message to channel: {}", e);
+                        }
+                        // println!("$$$$$$: {:?}", message_clone);
+
+                        if !message_clone.canconnect {
+                            println!(" Username already taken. Please choose another one or \\n The number of connected players exceeds 10");
+                             std::process::exit(1); 
                         }
                     } else {
                         eprintln!("Failed to deserialize response");
@@ -137,31 +144,44 @@ async fn main() -> io::Result<()> {
         .insert_resource(udp_socket_resource)
         .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_systems(Startup, setup)
-        .configure_sets(Update, (
-            GameSet::NetworkInput,
-            GameSet::PlayerInput,
-            GameSet::Movement,
-            GameSet::Collision,
-            GameSet::UI,
-            GameSet::NetworkOutput,
-        ).chain())
+        .configure_sets(
+            Update,
+            (
+                GameSet::NetworkInput,
+                GameSet::PlayerInput,
+                GameSet::Movement,
+                GameSet::Collision,
+                GameSet::UI,
+                GameSet::NetworkOutput,
+            )
+                .chain(),
+        )
         .add_systems(Update, handle_server_messages.in_set(GameSet::NetworkInput))
-        .add_systems(Update, (
-            player_movement_and_rotation,
-            shoot_ball,
-            fps_counter_showhide,
-            check_player_death
-        ).in_set(GameSet::PlayerInput))
+        .add_systems(
+            Update,
+            (
+                player_movement_and_rotation,
+                shoot_ball,
+                fps_counter_showhide,
+                check_player_death,
+            )
+                .in_set(GameSet::PlayerInput),
+        )
         .add_systems(Update, move_balls.in_set(GameSet::Movement))
-        .add_systems(Update, check_ball_player_collisions.in_set(GameSet::Collision))
+        .add_systems(
+            Update,
+            check_ball_player_collisions.in_set(GameSet::Collision),
+        )
         // .add_systems(Update, handle_player_life_update.in_set(GameSet::UpdateLife))
-        .add_systems(Update, (
-            update_minimap_player,
-            fps_text_update_system,
-        ).in_set(GameSet::UI))
-        .add_systems(Update, react_to_server_messages.in_set(GameSet::NetworkOutput))
+        .add_systems(
+            Update,
+            (update_minimap_player, fps_text_update_system).in_set(GameSet::UI),
+        )
+        .add_systems(
+            Update,
+            react_to_server_messages.in_set(GameSet::NetworkOutput),
+        )
         .add_systems(Update, react_to_server_ball.in_set(GameSet::NetworkOutput))
-
         .run();
 
     Ok(())
@@ -179,10 +199,7 @@ fn handle_server_messages(
         info!("Message from server: {:?}", message);
         match message.message_type {
             MessageType::ConnectSuccessfull => {
-                println!(
-                    "Server response: {:?}",
-                    message
-                );
+                println!("Server response: {:?}", message);
 
                 udp_socket_resource.id = message.id_player;
                 // Mettez à jour d'autres états du jeu si nécessaire
@@ -190,11 +207,11 @@ fn handle_server_messages(
             }
             MessageType::Action => {
                 server_message_events.send(ServerMessageReceived(message.clone()));
-            },
+            }
             MessageType::PlayerDeath => {
                 player_state.is_dead = true;
             }
-            
+
             _ => {
                 println!("Unhandled message type: {:?}", message.message_type);
             }
@@ -202,10 +219,7 @@ fn handle_server_messages(
     }
 }
 
-fn check_player_death(
-    player_state: Res<PlayerState>,
-    mut exit: EventWriter<bevy::app::AppExit>,
-) {
+fn check_player_death(player_state: Res<PlayerState>, mut exit: EventWriter<bevy::app::AppExit>) {
     if player_state.is_dead {
         println!("Player is dead, disconnecting...");
         // Quitter l'application

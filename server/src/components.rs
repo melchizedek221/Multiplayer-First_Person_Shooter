@@ -20,6 +20,7 @@ pub struct MessageSended {
    pub id_player: usize,
    pub player_life: i64,
    pub level: i32, 
+   pub canconnect: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
