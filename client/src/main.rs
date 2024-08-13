@@ -110,7 +110,7 @@ async fn main() -> io::Result<()> {
                         // println!("$$$$$$: {:?}", message_clone);
 
                         if !message_clone.canconnect {
-                            println!(" Username already taken. Please choose another one or \\n The number of connected players exceeds 10");
+                            println!(" Username already taken. Please choose another one or \n The number of connected players exceeds 10");
                              std::process::exit(1); 
                         }
                     } else {

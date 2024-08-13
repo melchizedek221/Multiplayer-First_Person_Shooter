@@ -1,18 +1,21 @@
 use std::collections::HashMap;
 use bevy::prelude::*;
 
+#[allow(dead_code)]
 #[derive(Component, Debug, Clone)]
 pub struct Player{
     pub id: usize,
     pub life: i64
 }
 
+#[allow(dead_code)]
 #[derive(Component, Debug)]
 pub struct OtherPlayer {
     pub id: usize,
     pub life: i64
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 pub struct OtherBall {
     pub id: usize,
@@ -71,6 +74,7 @@ impl OtherBallMap {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 pub struct MinimapPlayerMarker(pub Entity);
 
