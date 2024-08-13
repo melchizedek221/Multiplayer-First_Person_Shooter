@@ -32,9 +32,9 @@ async fn main() -> std::io::Result<()> {
 
     let port: &str = "8081";
     let mut can = true;
-    let ip = match local_ip::get() {
-        Some(ip) => ip,
-        None => {
+    let ip = match local_ip() {
+        Ok(ip) => ip,
+        Err(_) => {
             eprintln!("Failed to get local IP address: ");
             return Ok(());
         }
