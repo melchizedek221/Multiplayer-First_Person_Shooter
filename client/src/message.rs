@@ -14,7 +14,10 @@ pub enum MessageType {
     ConnectFailed,
     UpdateLife,
     BallMovement,
-    PlayerDeath
+    PlayerDeath,
+    OtherDeadPlayer,
+    DeletePlayer,
+
 }
 
 #[derive(Resource, Debug, Clone)]
@@ -41,7 +44,8 @@ pub struct MessageSended {
     pub player_name: String,
     pub content: Value, 
     pub id_player: usize,
-
+    pub player_life: i64,
+    pub level: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -56,6 +60,8 @@ pub async fn send_message(socket: &Arc<UdpSocket>, typ: MessageType, username: S
         player_name: username,
         content: content.clone(),
         id_player,
+        player_life: 0,
+        level: 0,
     };
     let message_data = serde_json::to_vec(&connect_msg)?;
     socket.send(&message_data).await?;  

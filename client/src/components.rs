@@ -1,18 +1,26 @@
-use std::collections::HashMap;
 use bevy::prelude::*;
+use std::collections::HashMap;
 
 #[allow(dead_code)]
 #[derive(Component, Debug, Clone)]
-pub struct Player{
+pub struct Player {
     pub id: usize,
-    pub life: i64
+    pub life: i64,
+}
+
+pub struct FlashTimer(pub Timer);
+
+impl FlashTimer {
+    pub fn new(duration: f32) -> Self {
+        FlashTimer(Timer::from_seconds(duration, TimerMode::Once))
+    }
 }
 
 #[allow(dead_code)]
 #[derive(Component, Debug)]
 pub struct OtherPlayer {
     pub id: usize,
-    pub life: i64
+    pub life: i64,
 }
 
 #[allow(dead_code)]
@@ -91,7 +99,6 @@ pub fn get_val(value: f64) -> f64 {
         value
     }
 }
-
 
 #[derive(Resource)]
 pub struct PlayerState {

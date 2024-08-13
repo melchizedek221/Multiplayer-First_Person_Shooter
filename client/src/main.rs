@@ -9,6 +9,7 @@ use serde_json::{Error, Value};
 use std::io::{self, Write};
 use std::sync::Arc;
 use tokio::net::UdpSocket;
+use tokio::runtime::Runtime;
 use tokio::signal;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
@@ -36,6 +37,9 @@ enum GameSet {
     Collision,
     UI,
     NetworkOutput,
+}
+lazy_static::lazy_static! {
+    static ref TOKIO_RUNTIME: Runtime = Runtime::new().unwrap();
 }
 
 #[tokio::main]
@@ -111,7 +115,7 @@ async fn main() -> io::Result<()> {
 
                         if !message_clone.canconnect {
                             println!(" Username already taken. Please choose another one or \n The number of connected players exceeds 10");
-                             std::process::exit(1); 
+                            std::process::exit(1);
                         }
                     } else {
                         eprintln!("Failed to deserialize response");
@@ -194,6 +198,7 @@ fn handle_server_messages(
     mut udp_socket_resource: ResMut<UdpSocketResource>,
     mut server_message_events: EventWriter<ServerMessageReceived>,
     mut player_state: ResMut<PlayerState>,
+    mut other_players_map: ResMut<OtherPlayersMap>,
 ) {
     while let Ok(message) = message_receiver.0.try_recv() {
         info!("Message from server: {:?}", message);
@@ -210,6 +215,29 @@ fn handle_server_messages(
             }
             MessageType::PlayerDeath => {
                 player_state.is_dead = true;
+
+                let socket = udp_socket_resource.socket.clone();
+                TOKIO_RUNTIME.spawn(async move {
+                    if let Err(e) = send_message(
+                        &socket,
+                        MessageType::OtherDeadPlayer,
+                        "".to_string(),
+                        Value::Null,
+                        message.id_player,
+                    )
+                    .await
+                    {
+                        eprintln!("Échec de l'envoi du message : {}", e);
+                    }
+                });
+            }
+            MessageType::DeletePlayer => {
+                if let Some(&entity) = other_players_map.0.get(&message.id_player) {
+                    println!("got dead player id: {}", message.id_player);
+                    println!("Entity value {:?}", entity);
+                    commands.entity(entity).despawn_recursive();
+                    other_players_map.0.remove(&message.id_player);
+                }
             }
 
             _ => {

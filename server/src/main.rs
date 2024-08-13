@@ -32,10 +32,10 @@ async fn main() -> std::io::Result<()> {
 
     let port: &str = "8081";
     let mut can = true;
-    let ip = match local_ip() {
-        Ok(ip) => ip,
-        Err(e) => {
-            eprintln!("Failed to get local IP address: {}", e);
+    let ip = match local_ip::get() {
+        Some(ip) => ip,
+        None => {
+            eprintln!("Failed to get local IP address: ");
             return Ok(());
         }
     };
@@ -121,12 +121,10 @@ async fn main() -> std::io::Result<()> {
                     };
                     let life_player = player.life;
 
-                    can = usernames.len()< 9;
+                    can = usernames.len() < 9;
 
-                    
                     usernames.insert(message.player_name.clone(), player);
-                   
-                    
+
                     println!("usernames added to map: {:?}", &usernames);
                     let response = MessageSended {
                         message_type: MessageType::ConnectSuccessfull,
@@ -223,7 +221,29 @@ async fn main() -> std::io::Result<()> {
                     }
                 }
             }
-
+            MessageType::OtherDeadPlayer => {
+                let mut clients = usernames.lock().await;
+                for player in clients.values_mut() {
+                    if player.id != message.id_player {
+                        let response = MessageSended {
+                            message_type: MessageType::DeletePlayer,
+                            player_name: message.player_name.clone(),
+                            content: message.content.clone(),
+                            id_player: message.id_player,
+                            player_life: player.life,
+                            level: number,
+                            canconnect: can,
+                        };
+                        let response_data = serde_json::to_vec(&response).unwrap();
+                        if let Err(e) = socket
+                            .send_to(&response_data, player.ip_address.clone())
+                            .await
+                        {
+                            eprintln!("Failed to send response: {}", e);
+                        }
+                    }
+                }
+            }
             _ => {
                 unimplemented!()
             }

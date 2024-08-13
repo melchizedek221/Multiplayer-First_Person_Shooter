@@ -9,7 +9,9 @@ pub enum MessageType {
    Disconnect,
    Action,
    UpdateLife,
-   PlayerDeath
+   PlayerDeath,
+   OtherDeadPlayer,
+   DeletePlayer,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
