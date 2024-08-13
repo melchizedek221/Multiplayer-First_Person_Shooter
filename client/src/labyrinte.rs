@@ -181,7 +181,7 @@ pub fn setup(
     ];
     let mut id_player = 0;
     let mut player_life = 0;
-    let mut start_position = Vec3::new(0., 0., 0.);
+    let mut start_position = Vec3::new(2.0, 1.0, 1.5);
  let mut x=0;
     while let Ok(message) = message_receiver.0.try_recv() {
         start_position = if message.id_player < start_positions.len() {
@@ -195,7 +195,7 @@ pub fn setup(
             }
             start_positions[message.id_player + x]
         } else {
-            Vec3::new(2.0, 1.0, 2.0)
+            Vec3::new(2.0, 1.0, 1.5)
         };
         id_player = message.id_player;
         player_life = message.player_life;

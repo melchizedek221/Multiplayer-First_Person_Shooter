@@ -74,6 +74,8 @@ pub fn player_movement_and_rotation(
 
             if let Err(e) = send_message(&socket, MessageType::Action, username, content, player_id).await {
                 eprintln!("Échec de l'envoi du message : {}", e);
+                println!("The server is unavaible");
+            std::process::exit(1); 
             }
         });
     }

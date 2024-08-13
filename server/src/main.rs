@@ -117,7 +117,7 @@ async fn main() -> std::io::Result<()> {
                         player_name: message.player_name.clone(),
                         ip_address: src.to_string(),
                         id: id,
-                        life: 20,
+                        life: 10,
                     };
                     let life_player = player.life;
 
