@@ -24,7 +24,6 @@ pub fn player_movement_and_rotation(
     // Destructure and clone necessary components
     let (mut velocity, mut transform, mut last_sent, player) = query.single_mut();
     let player_id = player.id;
-    // let player_life = player.life;
 
     let mut movement = Vec3::ZERO;
     let mut rotation = 0.0;
@@ -39,6 +38,8 @@ pub fn player_movement_and_rotation(
     // Apply movement
     if movement.length() > 0.0 {
         movement = movement.normalize();
+    } else {
+        movement = Vec3::ZERO; // Stop movement if no key is pressed
     }
     let speed = 3.0;
     velocity.linvel = movement * speed;
@@ -74,13 +75,12 @@ pub fn player_movement_and_rotation(
 
             if let Err(e) = send_message(&socket, MessageType::Action, username, content, player_id).await {
                 eprintln!("Échec de l'envoi du message : {}", e);
-                println!("The server is unavaible");
-            std::process::exit(1); 
+                println!("The server is unavailable");
+                std::process::exit(1); 
             }
         });
     }
 }
-
 
 pub fn update_minimap_player(
     maze: Res<Maze>,
