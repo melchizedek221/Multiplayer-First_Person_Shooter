@@ -8,6 +8,7 @@ pub struct Player {
     pub life: i64,
 }
 
+#[allow(dead_code)]
 pub struct FlashTimer(pub Timer);
 
 impl FlashTimer {
